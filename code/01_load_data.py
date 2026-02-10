@@ -9,7 +9,7 @@ Tareas planificadas:
 - Validar que el campo de identificación de condado (FIPS) sea consistente
 - Exportar resumen descriptivo para verificación
 
-Fuente de datos: https://github.com/MIT-CEEPR/ecf
+Fuente de datos: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials
 """
 
 # TODO: Implementar en Avance 2
