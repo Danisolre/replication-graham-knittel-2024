@@ -8,9 +8,9 @@ Graham, K., & Knittel, C. R. (2024). *Assessing the distribution of employment v
 
 | Integrante | Rol | GitHub |
 |---|---|---|
-| Daniela Solano Restrepo | [Por definir] | [@Danisolre](https://github.com/Danisolre) |
-| Jonathan Melo | [Por definir] | [@jonathanmelosa](https://github.com/jonathanmelosa) |
-| Natalia Suescún | [Por definir] | [@NataliaSFernandez](https://github.com/NataliaSFernandez) |
+| Daniela Solano Restrepo | [Gestión de datos] | [@Danisolre](https://github.com/Danisolre) |
+| Jonathan Melo | [Código y visualización ] | [@jonathanmelosa](https://github.com/jonathanmelosa) |
+| Natalia Suescún | [Documentación y gestión] | [@NataliaSFernandez](https://github.com/NataliaSFernandez) |
 
 **Profesor:** Gustavo Castillo — [@guscastilloa](https://github.com/guscastilloa)
 
