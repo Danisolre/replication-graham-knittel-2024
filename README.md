@@ -8,9 +8,9 @@ Graham, K., & Knittel, C. R. (2024). *Assessing the distribution of employment v
 
 | Integrante | Rol | GitHub |
 |---|---|---|
-| Daniela Solano Restrepo | [Gestión de datos] | [@Danisolre](https://github.com/Danisolre) |
-| Jonathan Melo | [Código y visualización ] | [@jonathanmelosa](https://github.com/jonathanmelosa) |
-| Natalia Suescún | [Documentación y gestión] | [@NataliaSFernandez](https://github.com/NataliaSFernandez) |
+| Daniela Solano Restrepo | Gestión de datos | [@Danisolre](https://github.com/Danisolre) |
+| Jonathan Melo | Código y visualización  | [@jonathanmelosa](https://github.com/jonathanmelosa) |
+| Natalia Suescún | Documentación y gestión | [@NataliaSFernandez](https://github.com/NataliaSFernandez) |
 
 **Profesor:** Gustavo Castillo — [@guscastilloa](https://github.com/guscastilloa)
 
@@ -78,12 +78,12 @@ Librerías principales:
 
 ### Datos
 
-- **ECF_final.csv** — Indicador de huella de carbono laboral por condado. Disponible en el [repositorio de replicación del artículo](https://github.com/MIT-CEEPR/ecf).
+- **ECF_final.csv** — Indicador de huella de carbono laboral por condado. Disponible en el [repositorio de replicación del artículo](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials).
 - **Shapefile de condados de EE.UU.** — Geometría para la visualización. Fuente: U.S. Census Bureau (TIGER/Line Shapefiles).
 
 ## Repositorio original de replicación
 
-Los datos y código del artículo están disponibles en: [https://github.com/MIT-CEEPR/ecf](https://github.com/MIT-CEEPR/ecf)
+Los datos y código del artículo están disponibles en: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials
 
 ## Instrucciones de ejecución
 
