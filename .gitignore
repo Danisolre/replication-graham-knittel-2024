@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Entornos virtuales
+venv/
+env/
+.env/
+
+# Datos grandes (descargar según instrucciones del README)
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.zip
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
