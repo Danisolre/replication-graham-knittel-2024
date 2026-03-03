@@ -13,4 +13,9 @@ Desafío anticipado: Asegurar que las llaves FIPS del ECF y del shapefile
 empaten correctamente (formato, ceros iniciales, etc.)
 """
 
-# TODO: Implementar en Avance 2
+import pandas as pd
+import geopandas as gpd
+
+# --- Rutas  ---
+ECF_PATH = r"data/ECF_total.csv"
+SHAPE_PATH = r"data/shapes/counties.shp"      # o .geojson / .gpkg

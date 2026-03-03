@@ -10,6 +10,21 @@ Tareas planificadas:
 - Exportar resumen descriptivo para verificación
 
 Fuente de datos: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials
+FUENTE: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials/blob/main/Analysis/overallFootprintCalc/Output/ECF_total.csv
 """
 
-# TODO: Implementar en Avance 2
+# Geofike
+import os
+import json
+from urllib.request import urlopen
+
+url = "https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json"
+
+with urlopen(url) as response:
+    counties = json.load(response)
+
+# Guardar archivo localmente
+with open("data/geojson/geojson-counties-fips.json", "w", encoding="utf-8") as f:
+    json.dump(counties, f)
+
+print("GeoJSON guardado correctamente en data/geojson/")
