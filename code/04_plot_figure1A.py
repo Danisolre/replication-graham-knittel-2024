@@ -10,7 +10,7 @@ Inputs  (produced by 03_merge_geo.py)
 
 Output
 ------
-  figures/fig1A_county.png   – high-resolution county map  (≈ Fig 1A)
+  figures/fig1A_county.png  - high-resolution county map  (≈ Fig 1A)
  
 Usage
 -----
@@ -78,8 +78,8 @@ def county_collection(feats):
         for ring in get_rings(geo):
             patches.append(MplPolygon(ring, closed=True))
             colors.append(c)
-    return PatchCollection(patches, facecolors=colors, edgecolors="#AAAAAA",
-                           linewidths=0.2, zorder=2)
+    return PatchCollection(patches, facecolors=colors, edgecolors="#636262",
+                           linewidths=0.3, zorder=2)
 
 def state_outlines(feats, prec=3):
     """
