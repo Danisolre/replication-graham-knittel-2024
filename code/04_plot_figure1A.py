@@ -125,13 +125,7 @@ lc_ak   = state_outlines(ak)
 lc_hi   = state_outlines(hi)
 
 # ── FIGURE LAYOUT ─────────────────────────────────────────────────────────────
-# Heights from bottom:
-#   0.00–0.04  social cost bar
-#   0.04–0.05  gap
-#   0.05–0.12  ECF histogram
-#   0.12–0.14  gap
-#   0.14–0.32  AK / HI insets
-#   0.32–1.00  main map
+
 fig = plt.figure(figsize=(16, 12), facecolor="white", dpi=DPI)
 
 # ── MAIN MAP ──────────────────────────────────────────────────────────────────

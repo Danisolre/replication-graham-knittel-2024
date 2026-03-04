@@ -24,7 +24,7 @@ with urlopen(url) as response:
     counties = json.load(response)
 
 # Guardar archivo localmente
-with open("data/geojson/geojson-counties-fips.json", "w", encoding="utf-8") as f:
+with open("data/raw/geojson-counties-fips.json", "w", encoding="utf-8") as f:
     json.dump(counties, f)
 
 print("GeoJSON guardado correctamente en data/geojson/")
