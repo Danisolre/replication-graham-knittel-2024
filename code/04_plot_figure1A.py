@@ -17,19 +17,24 @@ Usage
   python 04_plot_figure1A.py
 
 """
+"""
+plot_fig1A.py  v3
+─────────────────────────────────────────────────────────────────────────────
+Fixes:
+  1. State outlines (not country outline) – per-state segment deduplication
+  2. Vertical colorbar completely removed
+  3. Alaska & Hawaii bigger and above the bottom bars
+  4. Social cost bar matches paper (own log-spaced ticks, correct values)
+"""
 
-import json
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import json, numpy as np, matplotlib as mpl, matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 from matplotlib.patches import Polygon as MplPolygon
-from matplotlib.collections import PatchCollection
+from matplotlib.collections import PatchCollection, LineCollection
 from matplotlib.colors import LinearSegmentedColormap
-from pathlib import Path
+from collections import defaultdict
 
-# ── paths 
+
 GEOJSON_PATH = "data/processed/counties_ecf_merged.geojson"
 OUTPUT_PATH  = "output/fig1A_ecf_county.png"
 ECF_COL_RAW  = "tonneCO2e_eff_peremp_avg"
@@ -37,245 +42,198 @@ LOG_COL      = "tonneCO2e_eff_peremp_avg_log10"
 SCC          = 190   # $/tonne CO2e (EPA social cost of carbon used in paper)
 DPI          = 200
 
-# ── LOAD GEOJSON 
+# ── LOAD ──────────────────────────────────────────────────────────────────────
 print("Loading GeoJSON …")
 with open(GEOJSON_PATH) as f:
-    gj = json.load(f)
+    features = json.load(f)["features"]
 
-features = gj["features"]
+log_vals = np.array([
+    feat["properties"][LOG_COL] for feat in features
+    if feat["properties"].get(LOG_COL) is not None
+    and int(str(feat["properties"].get("STATE","99")).zfill(2)) <= 56
+])
+log_min, log_max, log_mean = log_vals.min(), log_vals.max(), log_vals.mean()
+print(f"ECF log10: min={log_min:.3f} mean={log_mean:.3f} max={log_max:.3f}")
 
-# ── COLLECT ECF VALUES FOR SCALE ──────────────────────────────────────────────
-log_vals = []
-for feat in features:
-    p = feat["properties"]
-    state = str(p.get("STATE", "99")).zfill(2)
-    if int(state) > 56:
-        continue
-    v = p.get(LOG_COL)
-    if v is not None:
-        log_vals.append(v)
-
-log_vals = np.array(log_vals)
-log_min  = log_vals.min()
-log_max  = log_vals.max()
-log_mean = log_vals.mean()
-
-print(f"log10 ECF → min={log_min:.3f}  mean={log_mean:.3f}  max={log_max:.3f}")
-print(f"ECF (raw) → min={10**log_min:.1f}  mean={10**log_mean:.1f}  max={10**log_max:.1f}")
-
-# ── COLORS: blue (below mean) → white → orange/red (above mean) 
-colors_diverging = [
-    "#2166AC",   # dark blue
-    "#74ADD1",   # medium blue
-    "#ABD9E9",   # light blue
-    "#E0F3F8",   # very light blue
-    "#FFFFBF",   # near-white/pale yellow (centre)
-    "#FEE090",   # light orange
-    "#FDAE61",   # orange
-    "#F46D43",   # dark orange
-    "#D73027",   # red
-    "#A50026",   # deep red
-]
-cmap = LinearSegmentedColormap.from_list("ecf_div", colors_diverging, N=512)
+# ── COLORMAP ──────────────────────────────────────────────────────────────────
+cmap = LinearSegmentedColormap.from_list("ecf", [
+    "#2166AC","#74ADD1","#ABD9E9","#E0F3F8","#FFFFBF",
+    "#FEE090","#FDAE61","#F46D43","#D73027","#A50026"
+], N=512)
 norm = mcolors.TwoSlopeNorm(vmin=log_min, vcenter=log_mean, vmax=log_max)
 
 # ── extract coordinates 
-def get_rings(geometry):
-    """Return list of numpy arrays (each an exterior ring), handling Polygon & MultiPolygon."""
-    rings = []
-    if geometry["type"] == "Polygon":
-        rings.append(np.array(geometry["coordinates"][0]))
-    elif geometry["type"] == "MultiPolygon":
-        for poly in geometry["coordinates"]:
-            rings.append(np.array(poly[0]))
-    return rings
+def get_rings(geo):
+    if geo["type"] == "Polygon":
+        return [np.array(geo["coordinates"][0])]
+    return [np.array(p[0]) for p in geo["coordinates"]]
 
-# build patch collection for a set of features 
-def build_collection(feats, norm, cmap, transform=None):
-    patches = []
-    facecolors = []
-    for feat in feats:
-        p   = feat["properties"]
-        geo = feat.get("geometry")
-        if geo is None:
-            continue
-        v = p.get(LOG_COL)
-        color = cmap(norm(v)) if v is not None else (0.85, 0.85, 0.85, 1.0)
+def county_collection(feats):
+    patches, colors = [], []
+    for f in feats:
+        geo = f.get("geometry")
+        if not geo: continue
+        v = f["properties"].get(LOG_COL)
+        c = cmap(norm(v)) if v is not None else (0.85, 0.85, 0.85, 1)
         for ring in get_rings(geo):
-            if transform is not None:
-                ring = transform(ring)
-            patch = MplPolygon(ring, closed=True)
-            patches.append(patch)
-            facecolors.append(color)
-    col = PatchCollection(patches, facecolors=facecolors,
-                          edgecolors="#999999", linewidths=0.15, zorder=2)
-    return col
+            patches.append(MplPolygon(ring, closed=True))
+            colors.append(c)
+    return PatchCollection(patches, facecolors=colors, edgecolors="#AAAAAA",
+                           linewidths=0.2, zorder=2)
+
+def state_outlines(feats, prec=3):
+    """
+    Per-state: segments appearing exactly once within a state = state exterior.
+    Collect all states' exterior segments together → draws state borders only.
+    """
+    # Group by state
+    by_state = defaultdict(list)
+    for f in feats:
+        si = str(f["properties"].get("STATE","99")).zfill(2)
+        by_state[si].append(f)
+
+    all_exterior = []
+    for si, sfeats in by_state.items():
+        seg_cnt = defaultdict(int)
+        for f in sfeats:
+            geo = f.get("geometry")
+            if not geo: continue
+            rings = (geo["coordinates"] if geo["type"] == "Polygon"
+                     else [p for poly in geo["coordinates"] for p in poly])
+            for ring in rings:
+                pts = [(round(x, prec), round(y, prec)) for x, y in ring]
+                for i in range(len(pts) - 1):
+                    seg = tuple(sorted([pts[i], pts[i+1]]))
+                    seg_cnt[seg] += 1
+        all_exterior.extend(seg for seg, cnt in seg_cnt.items() if cnt == 1)
+
+    return LineCollection(all_exterior, colors="black", linewidths=0.7, zorder=3)
 
 # ── SPLIT FEATURES ────────────────────────────────────────────────────────────
-feats_cont = []
-feats_ak   = []
-feats_hi   = []
+cont, ak, hi = [], [], []
+for f in features:
+    si = int(str(f["properties"].get("STATE","99")).zfill(2))
+    if si > 56: continue
+    (ak if si == 2 else hi if si == 15 else cont).append(f)
 
-for feat in features:
-    state = str(feat["properties"].get("STATE", "99")).zfill(2)
-    si = int(state)
-    if si > 56:
-        continue
-    if si == 2:
-        feats_ak.append(feat)
-    elif si == 15:
-        feats_hi.append(feat)
-    else:
-        feats_cont.append(feat)
+# ── BUILD COLLECTIONS ─────────────────────────────────────────────────────────
+print("Building state outlines …")
+col_cont = county_collection(cont)
+col_ak   = county_collection(ak)
+col_hi   = county_collection(hi)
+lc_cont = state_outlines(cont)
+lc_ak   = state_outlines(ak)
+lc_hi   = state_outlines(hi)
 
 # ── FIGURE LAYOUT ─────────────────────────────────────────────────────────────
-fig = plt.figure(figsize=(16, 9), facecolor="white", dpi=DPI)
+# Heights from bottom:
+#   0.00–0.04  social cost bar
+#   0.04–0.05  gap
+#   0.05–0.12  ECF histogram
+#   0.12–0.14  gap
+#   0.14–0.32  AK / HI insets
+#   0.32–1.00  main map
+fig = plt.figure(figsize=(16, 10), facecolor="white", dpi=DPI)
 
-# Main map axes (contiguous US)
-ax = fig.add_axes([0.00, 0.12, 0.82, 0.82])
-ax.set_facecolor("white")
-ax.set_aspect("equal")
-ax.axis("off")
-
-# Alaska inset
-ax_ak = fig.add_axes([0.00, 0.01, 0.20, 0.20])
-ax_ak.set_facecolor("white")
-ax_ak.set_aspect("equal")
-ax_ak.axis("off")
-
-# Hawaii inset
-ax_hi = fig.add_axes([0.20, 0.01, 0.13, 0.10])
-ax_hi.set_facecolor("white")
-ax_hi.set_aspect("equal")
-ax_hi.axis("off")
-
-# ── DRAW CONTIGUOUS US 
+# ── MAIN MAP ──────────────────────────────────────────────────────────────────
+ax = fig.add_axes([0.00, 0.33, 0.88, 0.63])
+ax.set_facecolor("white"); ax.set_aspect("equal"); ax.axis("off")
 print("Drawing contiguous US …")
-col_cont = build_collection(feats_cont, norm, cmap)
-ax.add_collection(col_cont)
+ax.add_collection(county_collection(cont))
+ax.add_collection(lc_cont)
 ax.autoscale_view()
 
-# ── DRAW ALASKA 
+# ── ALASKA  (large, above bottom bars) ────────────────────────────────────────
+ax_ak = fig.add_axes([0.00, 0.15, 1.5, 0.18])  # [left, bottom, width, height]
+ax_ak.set_facecolor("white"); ax_ak.set_aspect("equal"); ax_ak.axis("off")
 print("Drawing Alaska …")
-col_ak = build_collection(feats_ak, norm, cmap)
-ax_ak.add_collection(col_ak)
+ax_ak.add_collection(county_collection(ak))
+ax_ak.add_collection(lc_ak)
 ax_ak.autoscale_view()
 
-# ── DRAW HAWAII 
+
+# ── HAWAII  (large, right of AK, above bottom bars) ───────────────────────────
+
+# bounding box en coords de datos (incluye colecciones)
+xmin, xmax = ax_ak.dataLim.xmin, ax_ak.dataLim.xmax
+ymin, ymax = ax_ak.dataLim.ymin, ax_ak.dataLim.ymax
+
+ax_hi = fig.add_axes([0.30, 0.15, 0.22, 0.16])
+ax_hi.set_facecolor("white"); ax_hi.set_aspect("equal"); ax_hi.axis("off")
 print("Drawing Hawaii …")
-col_hi = build_collection(feats_hi, norm, cmap)
-ax_hi.add_collection(col_hi)
+ax_hi.add_collection(county_collection(hi))
+ax_hi.add_collection(lc_hi)
 ax_hi.autoscale_view()
 
-# ── COLORBAR 
-cbar_ax = fig.add_axes([0.84, 0.18, 0.025, 0.62])
-sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
-sm.set_array([])
-cb = fig.colorbar(sm, cax=cbar_ax, orientation="vertical", extend="neither")
+# ── ECF HISTOGRAM ─────────────────────────────────────────────────────────────
+# Tick positions: paper uses 1.5, 5.5, 19(mean), 66, 230, 780, 2000
+ecf_ticks_raw = [1.5, 5.5, 19, 66, 230, 780, 2000]
+ecf_ticks_log = [np.log10(v) for v in ecf_ticks_raw
+                 if log_min <= np.log10(v) <= log_max]
 
-# Ticks matching paper (raw ECF values)
-tick_ecf    = [1.5, 5.5, 19, 66, 230, 780, 2000]
-tick_log10  = [np.log10(v) for v in tick_ecf if log_min <= np.log10(v) <= log_max]
-tick_labels = [f"{v:,.0f}" for v in tick_ecf if log_min <= np.log10(v) <= log_max]
-cb.set_ticks(tick_log10)
-cb.set_ticklabels(tick_labels)
-cb.ax.tick_params(labelsize=7.5)
-cb.set_label(
-    "Employment carbon footprint\n(metric tonnes CO₂e per employee)",
-    fontsize=8.5, labelpad=6
-)
-
-# Dashed line at national log mean
-mean_norm = norm(log_mean)
-cb.ax.axhline(mean_norm, color="black", linewidth=1.4, linestyle="--")
-
-# Label mean
-cbar_ax.text(
-    1.15, mean_norm,
-    f"  National\n  mean\n  ({10**log_mean:.0f})",
-    fontsize=6.5, va="center", ha="left",
-    transform=cbar_ax.transAxes, color="#222222"
-)
-
-# ── SECONDARY AXIS: Social cost ────────────────────────────────────────────────
-ax2 = cbar_ax.twinx()
-ax2.set_ylim(cbar_ax.get_ylim())
-
-sc_ticks = []
-sc_labels_right = []
-for v in tick_ecf:
-    lv = np.log10(v)
-    if log_min <= lv <= log_max:
-        sc = v * SCC
-        sc_ticks.append(norm(lv))
-        if sc >= 1_000_000:
-            sc_labels_right.append(f"${sc/1e6:,.0f}M")
-        elif sc >= 1_000:
-            sc_labels_right.append(f"${sc/1e3:,.0f}k")
-        else:
-            sc_labels_right.append(f"${sc:,.0f}")
-
-ax2.set_yticks(sc_ticks)
-ax2.set_yticklabels(sc_labels_right, fontsize=6.5)
-ax2.set_ylabel("Social cost per employee (USD)", fontsize=7.5, labelpad=6)
-
-# ── HISTOGRAM (bottom, matching paper's distribution bar) ─────────────────────
-ax_hist = fig.add_axes([0.05, 0.07, 0.56, 0.05])
+ax_hist = fig.add_axes([0.05, 0.07, 0.80, 0.055])
 ax_hist.set_facecolor("white")
-
-# Colour each bar according to its log10 value
-n_bins = 80
-counts, bin_edges = np.histogram(log_vals, bins=n_bins)
-bin_centres = (bin_edges[:-1] + bin_edges[1:]) / 2
-bar_colors = [cmap(norm(c)) for c in bin_centres]
-
-for i, (left, right, count, color) in enumerate(
-        zip(bin_edges[:-1], bin_edges[1:], counts, bar_colors)):
-    ax_hist.bar(left, count, width=(right - left), color=color,
-                edgecolor="none", align="edge")
+counts, edges = np.histogram(log_vals, bins=80)
+mids = (edges[:-1] + edges[1:]) / 2
+for l, r, cnt, col in zip(edges[:-1], edges[1:], counts,
+                           [cmap(norm(m)) for m in mids]):
+    ax_hist.bar(l, cnt, width=r - l, color=col, edgecolor="none", align="edge")
 
 ax_hist.axvline(log_mean, color="black", linewidth=1.2, linestyle="--")
 ax_hist.set_xlim(log_min - 0.05, log_max + 0.05)
+ax_hist.set_ylim(bottom=0)
 ax_hist.set_yticks([])
 ax_hist.spines[["top", "right", "left"]].set_visible(False)
-ax_hist.tick_params(axis="x", labelsize=7)
+ax_hist.set_xticks(ecf_ticks_log)
+ax_hist.set_xticklabels([f"{v:,}" for v in ecf_ticks_raw
+                          if log_min <= np.log10(v) <= log_max], fontsize=8.5)
+ax_hist.set_xlabel("Employment carbon footprint (metric tonnes CO₂e per employee)",
+                   fontsize=9.5, labelpad=5)
+ax_hist.tick_params(axis="x", length=4)
 
-# Custom x-tick labels: show raw ECF values at log positions
-nice_vals = [1.5, 5.5, 19, 66, 230, 780, 2000]
-ax_hist.set_xticks([np.log10(v) for v in nice_vals])
-ax_hist.set_xticklabels([f"{v:,}" for v in nice_vals], fontsize=7)
+# ── SOCIAL COST BAR  (matches paper exactly) ──────────────────────────────────
+# Paper ticks (from image): 367, 1270, 4400(mean), 15200, 52500, 182000, 463000
+# Their log10(SC/190) positions map onto the same log_min–log_max x-axis
+sc_ticks_raw  = [367, 1270, 4400, 15200, 52500, 182000, 463000]
+sc_ticks_log  = [np.log10(v / SCC) for v in sc_ticks_raw]  # position on log-ECF axis
 
-# Min / mean / max annotations
-for xval, raw, va_ in [
-    (log_min,  10**log_min,  "top"),
-    (log_mean, 10**log_mean, "top"),
-    (log_max,  10**log_max,  "top"),
-]:
-    ax_hist.axvline(xval, color="#444444", linewidth=0.7, linestyle=":")
+ax_sc = fig.add_axes([0.05, 0.015, 0.80, 0.027])
 
-ax_hist.set_xlabel(
-    "Employment carbon footprint (metric tonnes CO₂e per employee)",
-    fontsize=8, labelpad=4
-)
+# Gradient image (same colormap, same norm)
+gradient = np.linspace(log_min, log_max, 512).reshape(1, -1)
+ax_sc.imshow(gradient, aspect="auto", cmap=cmap, norm=norm,
+             extent=[log_min, log_max, 0, 1], origin="lower")
+ax_sc.set_xlim(log_min - 0.05, log_max + 0.05)
+ax_sc.set_ylim(0, 1)
+ax_sc.set_yticks([])
+ax_sc.spines[["top", "left", "right"]].set_visible(False)
 
-# Social cost secondary x-axis label below histogram
-fig.text(0.05, 0.035,
-         f"Social cost per employee (USD per employee, at ${SCC}/tCO₂e)",
-         fontsize=7, color="#555555")
+# Only show ticks that fall within our data range
+valid = [(lv, sv) for lv, sv in zip(sc_ticks_log, sc_ticks_raw)
+         if log_min <= lv <= log_max]
+ax_sc.set_xticks([lv for lv, _ in valid])
+
+def fmt_sc(v):
+    if v >= 1_000_000:
+        return f"${v/1e6:,.2f}M"
+    elif v >= 1_000:
+        return f"${v/1e3:,.0f}k"
+    return f"${v:,.0f}"
+
+ax_sc.set_xticklabels([fmt_sc(sv) for _, sv in valid], fontsize=8.5)
+ax_sc.set_xlabel("Social cost per employee (USD per employee)", fontsize=9.5, labelpad=5)
+ax_sc.tick_params(axis="x", length=4)
+
+# Mean dashed line on social cost bar
+ax_sc.axvline(log_mean, color="black", linewidth=1.2, linestyle="--")
 
 # ── TITLE ─────────────────────────────────────────────────────────────────────
-fig.text(
-    0.41, 0.97,
-    "Overall employment carbon footprints, by county",
-    ha="center", va="top", fontsize=14, fontweight="bold"
-)
-fig.text(
-    0.41, 0.935,
-    "Distribution of overall ECFs across counties",
-    ha="center", va="top", fontsize=9, style="italic", color="#444444"
-)
+fig.text(0.44, 0.985, "Overall employment carbon footprints, by county",
+         ha="center", va="top", fontsize=14, fontweight="bold")
+fig.text(0.44, 0.960, "Distribution of overall ECFs across counties",
+         ha="center", va="top", fontsize=9, style="italic", color="#444444")
 
 # ── SAVE ──────────────────────────────────────────────────────────────────────
 plt.savefig(OUTPUT_PATH, dpi=DPI, bbox_inches="tight", facecolor="white")
-print(f"\n Gráfica guardada en {OUTPUT_PATH}")
+print(f"\n Saved → {OUTPUT_PATH}")
 plt.close()
