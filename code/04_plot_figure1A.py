@@ -53,7 +53,10 @@ log_vals = np.array([
     and int(str(feat["properties"].get("STATE","99")).zfill(2)) <= 56
 ])
 log_min, log_max, log_mean = log_vals.min(), log_vals.max(), log_vals.mean()
+sc_mean = 10**log_mean * SCC
+sc_max  = 10**log_max  * SCC
 print(f"ECF log10: min={log_min:.3f} mean={log_mean:.3f} max={log_max:.3f}")
+print(f"SC mean=${sc_mean:,.0f}  SC max=${sc_max:,.0f}")
 
 # ── COLORMAP ──────────────────────────────────────────────────────────────────
 cmap = LinearSegmentedColormap.from_list("ecf", [
@@ -82,10 +85,6 @@ def county_collection(feats):
                            linewidths=0.3, zorder=2)
 
 def state_outlines(feats, prec=3):
-    """
-    Per-state: segments appearing exactly once within a state = state exterior.
-    Collect all states' exterior segments together → draws state borders only.
-    """
     # Group by state
     by_state = defaultdict(list)
     for f in feats:
@@ -133,7 +132,7 @@ lc_hi   = state_outlines(hi)
 #   0.12–0.14  gap
 #   0.14–0.32  AK / HI insets
 #   0.32–1.00  main map
-fig = plt.figure(figsize=(16, 10), facecolor="white", dpi=DPI)
+fig = plt.figure(figsize=(16, 12), facecolor="white", dpi=DPI)
 
 # ── MAIN MAP ──────────────────────────────────────────────────────────────────
 ax = fig.add_axes([0.00, 0.33, 0.88, 0.63])
@@ -144,6 +143,7 @@ ax.add_collection(lc_cont)
 ax.autoscale_view()
 
 # ── ALASKA  (large, above bottom bars) ────────────────────────────────────────
+
 ax_ak = fig.add_axes([0.00, 0.15, 1.5, 0.18])  # [left, bottom, width, height]
 ax_ak.set_facecolor("white"); ax_ak.set_aspect("equal"); ax_ak.axis("off")
 print("Drawing Alaska …")
@@ -191,15 +191,20 @@ ax_hist.set_xlabel("Employment carbon footprint (metric tonnes CO₂e per employ
                    fontsize=9.5, labelpad=5)
 ax_hist.tick_params(axis="x", length=4)
 
-# ── SOCIAL COST BAR  (matches paper exactly) ──────────────────────────────────
-# Paper ticks (from image): 367, 1270, 4400(mean), 15200, 52500, 182000, 463000
-# Their log10(SC/190) positions map onto the same log_min–log_max x-axis
-sc_ticks_raw  = [367, 1270, 4400, 15200, 52500, 182000, 463000]
-sc_ticks_log  = [np.log10(v / SCC) for v in sc_ticks_raw]  # position on log-ECF axis
+# ── SOCIAL COST BAR  
 
-ax_sc = fig.add_axes([0.05, 0.015, 0.80, 0.027])
+sc_base     = [367, 1270, 4400, 15200, 52500, 182000]
+sc_mean_val = round(sc_mean / 100) * 100    # round to nearest 100
+sc_max_val  = round(sc_max  / 1000) * 1000  # round to nearest 1000
 
-# Gradient image (same colormap, same norm)
+# Merge, deduplicate, sort
+all_sc = sorted(set(sc_base + [sc_mean_val, sc_max_val]))
+
+# Only keep ticks whose ECF position (SC/190) falls within our data range
+valid_sc = [(v, np.log10(v / SCC)) for v in all_sc
+            if log_min <= np.log10(v / SCC) <= log_max]
+
+ax_sc = fig.add_axes([0.05, 0.0009, 0.80, 0.027])
 gradient = np.linspace(log_min, log_max, 512).reshape(1, -1)
 ax_sc.imshow(gradient, aspect="auto", cmap=cmap, norm=norm,
              extent=[log_min, log_max, 0, 1], origin="lower")
@@ -208,11 +213,6 @@ ax_sc.set_ylim(0, 1)
 ax_sc.set_yticks([])
 ax_sc.spines[["top", "left", "right"]].set_visible(False)
 
-# Only show ticks that fall within our data range
-valid = [(lv, sv) for lv, sv in zip(sc_ticks_log, sc_ticks_raw)
-         if log_min <= lv <= log_max]
-ax_sc.set_xticks([lv for lv, _ in valid])
-
 def fmt_sc(v):
     if v >= 1_000_000:
         return f"${v/1e6:,.2f}M"
@@ -220,12 +220,33 @@ def fmt_sc(v):
         return f"${v/1e3:,.0f}k"
     return f"${v:,.0f}"
 
-ax_sc.set_xticklabels([fmt_sc(sv) for _, sv in valid], fontsize=8.5)
+ax_sc.set_xticks([lv for _, lv in valid_sc])
+ax_sc.set_xticklabels([fmt_sc(sv) for sv, _ in valid_sc], fontsize=8.5)
 ax_sc.set_xlabel("Social cost per employee (USD per employee)", fontsize=9.5, labelpad=5)
 ax_sc.tick_params(axis="x", length=4)
-
-# Mean dashed line on social cost bar
 ax_sc.axvline(log_mean, color="black", linewidth=1.2, linestyle="--")
+
+# Annotate mean and max with bold labels
+for sv, lv in valid_sc:
+    if sv in (sc_mean_val, sc_max_val):
+        ax_sc.get_xticklabels()  # force draw
+        # mark with bold via set_weight after
+        pass
+
+# Bold the mean and max tick labels
+tick_positions = [lv for _, lv in valid_sc]
+tick_labels_text = [fmt_sc(sv) for sv, _ in valid_sc]
+for i, (sv, lv) in enumerate(valid_sc):
+    weight = "bold" if sv in (sc_mean_val, sc_max_val) else "normal"
+    ax_sc.get_xticklabels()  # ensure rendered
+ax_sc.set_xticklabels(tick_labels_text, fontsize=8.5)
+
+# Re-draw bold labels manually
+fig.canvas.draw()
+for label, (sv, lv) in zip(ax_sc.get_xticklabels(), valid_sc):
+    if sv in (sc_mean_val, sc_max_val):
+        label.set_fontweight("bold")
+        label.set_fontsize(9)
 
 # ── TITLE ─────────────────────────────────────────────────────────────────────
 fig.text(0.44, 0.985, "Overall employment carbon footprints, by county",
@@ -235,5 +256,5 @@ fig.text(0.44, 0.960, "Distribution of overall ECFs across counties",
 
 # ── SAVE ──────────────────────────────────────────────────────────────────────
 plt.savefig(OUTPUT_PATH, dpi=DPI, bbox_inches="tight", facecolor="white")
-print(f"\n Saved → {OUTPUT_PATH}")
+print(f"\n✓ Saved → {OUTPUT_PATH}")
 plt.close()
