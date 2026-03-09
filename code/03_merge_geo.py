@@ -38,7 +38,7 @@ gdf["FIPS"] = gdf["STATE"].astype(str).str.zfill(2) + gdf["COUNTY"].astype(str).
 # --- ASEGURAR FIPS EN ECF (string 5 dígitos) ---
 ecf["FIPS"] = pd.to_numeric(ecf["FIPS"], errors="coerce").astype("Int64").astype(str).str.zfill(5)
 
-# --- MERGE ---
+# merge
 gdf_merged = gdf.merge(
     ecf,
     on="FIPS",
@@ -48,5 +48,5 @@ gdf_merged = gdf.merge(
 
 print("Condados en geojson:", len(gdf))
 
-# Guardar si quieres
+# Guardar el GeoDataFrame resultante como GeoJSON
 gdf_merged.to_file("data/processed/counties_ecf_merged.geojson", driver="GeoJSON")
