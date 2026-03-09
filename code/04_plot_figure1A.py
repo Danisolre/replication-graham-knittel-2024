@@ -108,14 +108,14 @@ def state_outlines(feats, prec=3):
 
     return LineCollection(all_exterior, colors="black", linewidths=0.7, zorder=3)
 
-# ── SPLIT FEATURES ────────────────────────────────────────────────────────────
+# ── SPLIT FEATURES 
 cont, ak, hi = [], [], []
 for f in features:
     si = int(str(f["properties"].get("STATE","99")).zfill(2))
     if si > 56: continue
     (ak if si == 2 else hi if si == 15 else cont).append(f)
 
-# ── BUILD COLLECTIONS ─────────────────────────────────────────────────────────
+# ── BUILD COLLECTIONS
 print("Building state outlines …")
 col_cont = county_collection(cont)
 col_ak   = county_collection(ak)
@@ -124,11 +124,11 @@ lc_cont = state_outlines(cont)
 lc_ak   = state_outlines(ak)
 lc_hi   = state_outlines(hi)
 
-# ── FIGURE LAYOUT ─────────────────────────────────────────────────────────────
+# ── FIGURE LAYOUT 
 
 fig = plt.figure(figsize=(16, 12), facecolor="white", dpi=DPI)
 
-# ── MAIN MAP ──────────────────────────────────────────────────────────────────
+# ── MAIN MAP 
 ax = fig.add_axes([0.00, 0.33, 0.88, 0.63])
 ax.set_facecolor("white"); ax.set_aspect("equal"); ax.axis("off")
 print("Drawing contiguous US …")
@@ -136,7 +136,7 @@ ax.add_collection(county_collection(cont))
 ax.add_collection(lc_cont)
 ax.autoscale_view()
 
-# ── ALASKA  (large, above bottom bars) ────────────────────────────────────────
+# ── ALASKA  
 
 ax_ak = fig.add_axes([0.00, 0.15, 1.5, 0.18])  # [left, bottom, width, height]
 ax_ak.set_facecolor("white"); ax_ak.set_aspect("equal"); ax_ak.axis("off")
@@ -146,7 +146,7 @@ ax_ak.add_collection(lc_ak)
 ax_ak.autoscale_view()
 
 
-# ── HAWAII  (large, right of AK, above bottom bars) ───────────────────────────
+# ── HAWAII  
 
 # bounding box en coords de datos (incluye colecciones)
 xmin, xmax = ax_ak.dataLim.xmin, ax_ak.dataLim.xmax
@@ -159,8 +159,7 @@ ax_hi.add_collection(county_collection(hi))
 ax_hi.add_collection(lc_hi)
 ax_hi.autoscale_view()
 
-# ── ECF HISTOGRAM ─────────────────────────────────────────────────────────────
-# Tick positions: paper uses 1.5, 5.5, 19(mean), 66, 230, 780, 2000
+# ── ECF HISTOGRAM ────────────────────────────────────────────────────
 ecf_ticks_raw = [1.5, 5.5, 19, 66, 230, 780, 2000]
 ecf_ticks_log = [np.log10(v) for v in ecf_ticks_raw
                  if log_min <= np.log10(v) <= log_max]
