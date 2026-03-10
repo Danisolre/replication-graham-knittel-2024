@@ -15,6 +15,23 @@ FUENTE: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMateri
 """
 import requests
 import os
+import json
+
+def remove_small_islands(geojson):
+    for feature in geojson["features"]:
+        state = str(feature["properties"].get("STATE", "")).zfill(2)
+
+        if state in ["02", "15"]:
+            geom = feature.get("geometry", {})
+
+            if geom.get("type") == "MultiPolygon":
+                largest = max(geom["coordinates"], key=lambda poly: len(poly[0]))
+                feature["geometry"] = {
+                    "type": "Polygon",
+                    "coordinates": largest
+                }
+
+    return geojson
 
 def load_county_geojson():
     # URL del recurso GeoJSON (Dataset oficial de condados EE.UU.)
@@ -33,9 +50,15 @@ def load_county_geojson():
         response.raise_for_status()
         
         # Persistencia del archivo en el sistema de archivos local
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(response.text)
-        
+       response = requests.get(url)
+response.raise_for_status()
+
+counties = response.json()
+counties = remove_small_islands(counties)
+
+with open(output_path, "w", encoding="utf-8") as f:
+    json.dump(counties, f)
+       
         print(f"Proceso finalizado. Archivo guardado en: {output_path}")
         
     except Exception as e:
