@@ -48,8 +48,6 @@ replication-graham-knittel-2024/
 │   └── figures/
 │       └── fig1A_ecf_county.png      # Figura 1A replicada
 │
-├── docs/                             # Documentación y decisiones metodológicas
-│
 ├── .gitignore
 ├── requirements.txt                  # Dependencias de Python
 └── README.md                         # Este archivo
@@ -75,7 +73,10 @@ Librerías principales:
 - `geopandas` — manejo de datos geoespaciales
 - `matplotlib` — visualización y generación de figuras
 - `numpy` — operaciones numéricas (escala logarítmica)
-
+- `request` - envío de solicitudes HTTP para obtener datos de APIs o web scraping
+- `os` - interacción con el sistema operativo (gestión de rutas, directorios y archivos)
+- `collections` - estructuras de datos especializadas como defaultdict y Counter para organizar y contar información
+  
 ### Datos
 
 - **ECF_total.csv** — Indicador de huella de carbono laboral por condado. Disponible en el [repositorio de replicación](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials).
