@@ -17,15 +17,6 @@ Usage
   python 04_plot_figure1A.py
 
 """
-"""
-plot_fig1A.py  v3
-─────────────────────────────────────────────────────────────────────────────
-Fixes:
-  1. State outlines (not country outline) – per-state segment deduplication
-  2. Vertical colorbar completely removed
-  3. Alaska & Hawaii bigger and above the bottom bars
-  4. Social cost bar matches paper (own log-spaced ticks, correct values)
-"""
 
 import json, numpy as np, matplotlib as mpl, matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
