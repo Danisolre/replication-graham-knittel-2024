@@ -9,8 +9,9 @@ Graham, K., & Knittel, C. R. (2024). *Assessing the distribution of employment v
 | Integrante | Rol | GitHub |
 |---|---|---|
 | Daniela Solano Restrepo | Gestión de datos | [@Danisolre](https://github.com/Danisolre) |
-| Jonathan Melo | Código y visualización  | [@jonathanmelosa](https://github.com/jonathanmelosa) |
+| Jonathan Melo | Código y visualización | [@jonathanmelosa](https://github.com/jonathanmelosa) |
 | Natalia Suescún | Documentación y gestión | [@NataliaSFernandez](https://github.com/NataliaSFernandez) |
+| Carlos Molina | Control de calidad y validación empírica | [@camolina2026](https://github.com/camolina2026) |
 
 **Profesor:** Gustavo Castillo — [@guscastilloa](https://github.com/guscastilloa)
 
@@ -27,31 +28,31 @@ El ECF es un indicador que mide la vulnerabilidad laboral ante la transición en
 **Evidencia:** Mapa coroplético de la Figura 1A — *Overall employment carbon footprints, by county.*
 
 ## Estructura de directorios
-
 ```
 replication-graham-knittel-2024/
 │
 ├── data/
-│   ├── raw/                  # Datos originales del repositorio de replicación
-│   │   └── README.md         # Descripción de los datos fuente (ECF_final.csv, shapefiles)
-│   └── processed/            # Datos procesados y listos para visualización
-│       └── README.md         # Descripción de los datos generados
+│   ├── raw/                          # Datos originales
+│   │   ├── ECF_total.csv             # Indicador ECF por condado
+│   │   └── geojson-counties-fips.json # Geometría de condados (GeoJSON)
+│   └── processed/                    # Datos procesados
+│       └── counties_ecf_merged.geojson # ECF + geometría unidos
 │
 ├── code/
-│   ├── 01_load_data.py       # Carga y validación de ECF_final.csv
-│   ├── 02_merge_geo.py       # Unión del ECF con geometría de condados (shapefile)
-│   └── 03_plot_figure1A.py   # Generación de la Figura 1A (mapa coroplético)
+│   ├── 01_load_data.py               # Carga y validación de datos
+│   ├── 02_explore_data.py            # Análisis exploratorio y estadísticas descriptivas
+│   ├── 03_merge_geo.py               # Unión ECF + geometría de condados
+│   └── 04_plot_figure1A.py           # Generación del mapa coroplético (Figura 1A)
 │
 ├── output/
-│   └── figures/              # Figura replicada
-│       └── README.md         # Descripción de los outputs generados
+│   └── figures/
+│       └── fig1A_ecf_county.png      # Figura 1A replicada
 │
-├── docs/                     # Documentación adicional y referencias
-│   └── README.md
+├── docs/                             # Documentación y decisiones metodológicas
 │
 ├── .gitignore
-├── requirements.txt          # Dependencias de Python
-└── README.md                 # Este archivo
+├── requirements.txt                  # Dependencias de Python
+└── README.md                         # Este archivo
 ```
 
 ## Requisitos técnicos
@@ -64,7 +65,6 @@ replication-graham-knittel-2024/
 ### Librerías de Python
 
 Las dependencias se instalan con:
-
 ```bash
 pip install -r requirements.txt
 ```
@@ -78,17 +78,14 @@ Librerías principales:
 
 ### Datos
 
-- **ECF_final.csv** — Indicador de huella de carbono laboral por condado. Disponible en el [repositorio de replicación del artículo](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials).
-- **Shapefile de condados de EE.UU.** — Geometría para la visualización. Fuente: U.S. Census Bureau (TIGER/Line Shapefiles).
+- **ECF_total.csv** — Indicador de huella de carbono laboral por condado. Disponible en el [repositorio de replicación](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials).
+- **geojson-counties-fips.json** — Geometría de condados de EE.UU. con códigos FIPS.
 
 ## Repositorio original de replicación
 
-Los datos y código del artículo están disponibles en: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials
+Los datos y código del artículo están disponibles en: [https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials)
 
 ## Instrucciones de ejecución
-
-*(Se actualizará en los siguientes avances con el procedimiento paso a paso para replicar la Figura 1A.)*
-
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/Danisolre/replication-graham-knittel-2024.git
@@ -97,8 +94,23 @@ cd replication-graham-knittel-2024
 # 2. Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Ejecutar scripts (próximamente)
-python code/01_load_data.py
-python code/02_merge_geo.py
-python code/03_plot_figure1A.py
+# 3. Ejecutar el pipeline de replicación
+python code/01_load_data.py          # Carga y valida ECF_total.csv
+python code/02_explore_data.py       # Análisis exploratorio y estadísticas descriptivas
+python code/03_merge_geo.py          # Merge ECF + geometría de condados
+python code/04_plot_figure1A.py      # Genera la Figura 1A replicada
 ```
+
+La figura replicada se guardará en `output/figures/fig1A_ecf_county.png`.
+
+## Decisiones metodológicas
+
+| Decisión | Detalle |
+|---|---|
+| Proyección cartográfica | Albers Equal Area Conic (ESRI:102003), estándar para mapas de EE.UU. continental |
+| Escala del mapa | Logarítmica (log10), consistente con el artículo original |
+| Paleta de colores | YlOrRd (amarillo → rojo), secuencial para valores positivos |
+| Formato geoespacial | GeoJSON de condados con códigos FIPS |
+| Ámbito geográfico | EE.UU. continental (CONUS); se excluyen Alaska, Hawaii y territorios |
+| Columna ECF utilizada | `eff_emiss_per_emp_avg` (emisiones efectivas por empleado, valor promedio) |
+| Herramienta original | La figura del paper fue generada en Tableau; esta réplica usa Python (matplotlib + geopandas) |
