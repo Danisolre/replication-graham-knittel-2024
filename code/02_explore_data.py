@@ -9,7 +9,7 @@ print(df.head())
 
 # Estadísticos descriptivos
 print("\nEstadísticos descriptivos:")
-print(df[['burden_avg','POP']].describe())
+print(df[['burden_avg', 'POP']].describe())
 
 # Verificar valores faltantes
 print("\nValores faltantes por columna:")
