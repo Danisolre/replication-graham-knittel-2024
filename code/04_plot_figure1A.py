@@ -81,8 +81,8 @@ def county_collection(feats):
         for ring in get_rings(geo):
             patches.append(MplPolygon(ring, closed=True))
             colors.append(c)
-    return PatchCollection(patches, facecolors=colors, edgecolors="#636262",
-                           linewidths=0.3, zorder=2)
+    return PatchCollection(patches, facecolors=colors, edgecolors="white",
+                       linewidths=0.1, zorder=2)
 
 def state_outlines(feats, prec=3):
     # Group by state
