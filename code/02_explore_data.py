@@ -40,6 +40,11 @@ print("\nNúmero total de condados analizados:", len(df))
 print("\nColumnas disponibles en el dataset:")
 print(df.columns.tolist())
 
+# Estadísticas de población
+print("\nEstadísticas de población:")
+print(df['POP'].describe())
+
+
 
 
 
