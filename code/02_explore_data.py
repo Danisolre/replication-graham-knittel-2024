@@ -1,8 +1,22 @@
+"""
+02_explore_data.py
+---------------
+Exploración y análisis descriptivo del archivo ECF_final.csv.
+Tareas planificadas:
+- Cargar el dataset ECF_total.csv desde data/raw/
+- Inspeccionar la estructura: columnas, tipos de datos, valores faltantes
+- Validar que el campo de identificación de condado (FIPS) sea consistente
+- Realizar análisis descriptivo: distribución de burden_avg, estadísticas de población
+
+Fuente de datos: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials
+FUENTE: https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials/blob/main/Analysis/overallFootprintCalc/Output/ECF_total.csv
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Cargar datos desde la carpeta del proyecto
-df = pd.read_csv("datos/raw/ECF_total.csv")
+df = pd.read_csv("data/raw/ECF_total.csv")
 
 # Mostrar primeras filas
 print("Primeras filas del dataset:")
@@ -43,6 +57,7 @@ print(df.columns.tolist())
 # Estadísticas de población
 print("\nEstadísticas de población:")
 print(df['POP'].describe())
+
 
 
 
