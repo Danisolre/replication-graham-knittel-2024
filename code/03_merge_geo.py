@@ -1,25 +1,27 @@
 """
-01_merge_geodata.py
+03_merge_geodata.py
 ────────────────────────────────────────────────────────────────────────────────
-Merges ECF_total.csv with the Plotly GeoJSON of US counties and produces a
-GeoDataFrame saved as merged_ecf_counties.geojson (and optionally .parquet).
+Merges ECF_total.csv con Plotly GeoJSON de los condados de US y produce un GeoDataFrame listo para graficar. 
+Se asegura de que el campo FIPS esté en formato string de 5 dígitos en ambos datasets antes de hacer el merge. 
+El resultado es un GeoDataFrame con geometrías de condados y atributos ECF, que se guarda como GeoJSON para su uso en la visualización.
 
 Inputs
 ------
-  data/raw/ECF_total.csv              output of the ECF calculation notebook
+  data/raw/ECF_total.csv              
   data/raw/geojson-counties-fips.json US county geometries (Plotly public dataset)
 
 Outputs
 -------
-  data/processed/merged_ecf_counties.geojson  GeoJSON ready for plotting
+  data/processed/merged_ecf_counties.geojson  GeoJSON con geometrías de condados y 
+  atributos ECF para graficar
 
-Usage
+Uso
 -----
-  python 01_merge_geodata.py
+  python 03_merge_geodata.py
 
-Requirements
+Requirimientos
 ------------
-  pip install pandas geopandas shapely requests
+  pip install pandas geopandas 
 """
 import pandas as pd
 import geopandas as gpd

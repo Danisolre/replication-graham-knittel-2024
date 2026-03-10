@@ -45,6 +45,9 @@ plt.hist(df['burden_avg'], bins=50)
 plt.title("Distribución de la carga promedio de carbono")
 plt.xlabel("burden_avg")
 plt.ylabel("Frecuencia")
+OUTPUT_PATH = "output/Distribucion_burden_avg.png"
+plt.savefig(OUTPUT_PATH, bbox_inches="tight", facecolor="white")
+plt.close()
 plt.show()
 
 # Validación final del número de condados analizados
