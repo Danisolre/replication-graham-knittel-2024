@@ -5,7 +5,12 @@ import matplotlib.pyplot as plt
 df = pd.read_csv("datos/crudo/ECF_total.csv")
 
 # Mostrar primeras filas
+print("Primeras filas del dataset:")
 print(df.head())
+
+# Número total de registros
+print("\nNúmero total de registros:")
+print(len(df))
 
 # Estadísticos descriptivos
 print("\nEstadísticos descriptivos:")
@@ -15,6 +20,11 @@ print(df[['burden_avg', 'POP']].describe())
 print("\nValores faltantes por columna:")
 print(df.isnull().sum())
 
+# Estadísticas adicionales para validar la distribución
+print("\nValor mínimo de burden_avg:", df['burden_avg'].min())
+print("Valor máximo de burden_avg:", df['burden_avg'].max())
+print("Promedio de burden_avg:", df['burden_avg'].mean())
+
 # Distribución de burden_avg
 plt.figure(figsize=(8,5))
 plt.hist(df['burden_avg'], bins=50)
@@ -22,4 +32,7 @@ plt.title("Distribución de la carga promedio de carbono")
 plt.xlabel("burden_avg")
 plt.ylabel("Frecuencia")
 plt.show()
+
+print("\nNúmero total de condados analizados:", len(df))
+
 
