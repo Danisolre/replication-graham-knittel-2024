@@ -36,6 +36,11 @@ plt.show()
 # Validación final del número de condados analizados
 print("\nNúmero total de condados analizados:", len(df))
 
+# Mostrar columnas del dataset
+print("\nColumnas disponibles en el dataset:")
+print(df.columns.tolist())
+
+
 
 
 
