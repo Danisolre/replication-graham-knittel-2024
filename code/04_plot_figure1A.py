@@ -72,8 +72,8 @@ def county_collection(feats):
         for ring in get_rings(geo):
             patches.append(MplPolygon(ring, closed=True))
             colors.append(c)
-    return PatchCollection(patches, facecolors=colors, edgecolors="#636262",
-                           linewidths=0.3, zorder=2)
+    return PatchCollection(patches, facecolors=colors, edgecolors="white",
+                       linewidths=0.1, zorder=2)
 
 def state_outlines(feats, prec=3):
     # Group by state
@@ -97,23 +97,20 @@ def state_outlines(feats, prec=3):
                     seg_cnt[seg] += 1
         all_exterior.extend(seg for seg, cnt in seg_cnt.items() if cnt == 1)
 
-    return LineCollection(all_exterior, colors="black", linewidths=0.7, zorder=3)
+   return LineCollection(all_exterior, colors="#444444", linewidths=0.5, zorder=3)
 
 # ── SPLIT FEATURES 
-cont, ak, hi = [], [], []
+cont = []
 for f in features:
-    si = int(str(f["properties"].get("STATE","99")).zfill(2))
-    if si > 56: continue
-    (ak if si == 2 else hi if si == 15 else cont).append(f)
+    si = int(str(f["properties"].get("STATE", "99")).zfill(2))
+    if si > 56 or si in [2, 15]:
+        continue
+    cont.append(f)
 
 # ── BUILD COLLECTIONS
-print("Building state outlines …")
+print("Building state outlines ...")
 col_cont = county_collection(cont)
-col_ak   = county_collection(ak)
-col_hi   = county_collection(hi)
 lc_cont = state_outlines(cont)
-lc_ak   = state_outlines(ak)
-lc_hi   = state_outlines(hi)
 
 # ── FIGURE LAYOUT 
 
@@ -129,26 +126,25 @@ ax.autoscale_view()
 
 # ── ALASKA  
 
-ax_ak = fig.add_axes([0.00, 0.15, 1.5, 0.18])  # [left, bottom, width, height]
-ax_ak.set_facecolor("white"); ax_ak.set_aspect("equal"); ax_ak.axis("off")
-print("Drawing Alaska …")
-ax_ak.add_collection(county_collection(ak))
-ax_ak.add_collection(lc_ak)
-ax_ak.autoscale_view()
-
+# ax_ak = fig.add_axes([0.00, 0.15, 1.5, 0.18])  # [left, bottom, width, height]
+# ax_ak.set_facecolor("white"); ax_ak.set_aspect("equal"); ax_ak.axis("off")
+# print("Drawing Alaska ...")
+# ax_ak.add_collection(county_collection(ak))
+# ax_ak.add_collection(lc_ak)
+# ax_ak.autoscale_view()
 
 # ── HAWAII  
 
 # bounding box en coords de datos (incluye colecciones)
-xmin, xmax = ax_ak.dataLim.xmin, ax_ak.dataLim.xmax
-ymin, ymax = ax_ak.dataLim.ymin, ax_ak.dataLim.ymax
+# xmin, xmax = ax_ak.dataLim.xmin, ax_ak.dataLim.xmax
+# ymin, ymax = ax_ak.dataLim.ymin, ax_ak.dataLim.ymax
 
-ax_hi = fig.add_axes([0.30, 0.15, 0.22, 0.16])
-ax_hi.set_facecolor("white"); ax_hi.set_aspect("equal"); ax_hi.axis("off")
-print("Drawing Hawaii …")
-ax_hi.add_collection(county_collection(hi))
-ax_hi.add_collection(lc_hi)
-ax_hi.autoscale_view()
+# ax_hi = fig.add_axes([0.30, 0.15, 0.22, 0.16])
+# ax_hi.set_facecolor("white"); ax_hi.set_aspect("equal"); ax_hi.axis("off")
+# print("Drawing Hawaii ...")
+# ax_hi.add_collection(county_collection(hi))
+# ax_hi.add_collection(lc_hi)
+# ax_hi.autoscale_view()
 
 # ── ECF HISTOGRAM ────────────────────────────────────────────────────
 ecf_ticks_raw = [1.5, 5.5, 19, 66, 230, 780, 2000]
