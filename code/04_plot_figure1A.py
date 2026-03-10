@@ -106,7 +106,7 @@ def state_outlines(feats, prec=3):
                     seg_cnt[seg] += 1
         all_exterior.extend(seg for seg, cnt in seg_cnt.items() if cnt == 1)
 
-    return LineCollection(all_exterior, colors="black", linewidths=0.7, zorder=3)
+   return LineCollection(all_exterior, colors="#444444", linewidths=0.5, zorder=3)
 
 # ── SPLIT FEATURES 
 cont = []
