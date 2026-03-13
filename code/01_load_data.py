@@ -14,7 +14,6 @@ import json
 import os
 import requests
 
-
 def remove_small_islands(geojson):
     """
     Para Alaska (02) y Hawaii (15), si la geometría es MultiPolygon,

@@ -129,7 +129,7 @@ ax.autoscale_view()
 
 # ── ALASKA  
 
-ax_ak = fig.add_axes([0.00, 0.15, 1.5, 0.18])  # [left, bottom, width, height]
+ax_ak = fig.add_axes([-0.4, 0.15, 1.2, 0.18])  # [left, bottom, width, height]
 ax_ak.set_facecolor("white"); ax_ak.set_aspect("equal"); ax_ak.axis("off")
 print("Drawing Alaska …")
 ax_ak.add_collection(county_collection(ak))
