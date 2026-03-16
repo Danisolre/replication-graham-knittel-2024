@@ -1,0 +1,12 @@
+name: ecf-replication
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pandas=2.1.4
+  - geopandas=0.14.2
+  - matplotlib=3.8.2
+  - numpy=1.26.2
+  - pip:
+    - shapely>=2.0
