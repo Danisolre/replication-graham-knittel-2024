@@ -28,29 +28,32 @@ El ECF es un indicador que mide la vulnerabilidad laboral ante la transición en
 **Evidencia:** Mapa coroplético de la Figura 1A — *Overall employment carbon footprints, by county.*
 
 ## Estructura de directorios
+
 ```
 replication-graham-knittel-2024/
 │
 ├── data/
-│   ├── raw/                          # Datos originales
-│   │   ├── ECF_total.csv             # Indicador ECF por condado
-│   │   └── geojson-counties-fips.json # Geometría de condados (GeoJSON)
-│   └── processed/                    # Datos procesados
+│   ├── raw/                            # Datos originales
+│   │   ├── ECF_total.csv               # Indicador ECF por condado
+│   │   └── geojson-counties-fips.json  # Geometría de condados (GeoJSON)
+│   └── processed/                      # Datos procesados
 │       └── counties_ecf_merged.geojson # ECF + geometría unidos
 │
 ├── code/
-│   ├── 01_load_data.py               # Carga y validación de datos
-│   ├── 02_explore_data.py            # Análisis exploratorio y estadísticas descriptivas
-│   ├── 03_merge_geo.py               # Unión ECF + geometría de condados
-│   └── 04_plot_figure1A.py           # Generación del mapa coroplético (Figura 1A)
+│   ├── 01_load_data.py                 # Carga y validación de datos
+│   ├── 02_explore_data.py              # Análisis exploratorio y estadísticas descriptivas
+│   ├── 03_merge_geo.py                 # Unión ECF + geometría de condados
+│   └── 04_plot_figure1A.py             # Generación del mapa coroplético (Figura 1A)
 │
 ├── output/
 │   └── figures/
-│       └── fig1A_ecf_county.png      # Figura 1A replicada
+│       └── fig1A_ecf_county.png        # Figura 1A replicada
+│
+├── docs/                               # Documentación y decisiones metodológicas
 │
 ├── .gitignore
-├── requirements.txt                  # Dependencias de Python
-└── README.md                         # Este archivo
+├── requirements.txt                    # Dependencias de Python
+└── README.md                           # Este archivo
 ```
 
 ## Requisitos técnicos
@@ -63,6 +66,7 @@ replication-graham-knittel-2024/
 ### Librerías de Python
 
 Las dependencias se instalan con:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -73,10 +77,7 @@ Librerías principales:
 - `geopandas` — manejo de datos geoespaciales
 - `matplotlib` — visualización y generación de figuras
 - `numpy` — operaciones numéricas (escala logarítmica)
-- `request` - envío de solicitudes HTTP para obtener datos de APIs o web scraping
-- `os` - interacción con el sistema operativo (gestión de rutas, directorios y archivos)
-- `collections` - estructuras de datos especializadas como defaultdict y Counter para organizar y contar información
-  
+
 ### Datos
 
 - **ECF_total.csv** — Indicador de huella de carbono laboral por condado. Disponible en el [repositorio de replicación](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials).
@@ -87,6 +88,7 @@ Librerías principales:
 Los datos y código del artículo están disponibles en: [https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials](https://github.com/kailingraham/GrahamKnittel_ECF_PNAS_ReplicationMaterials)
 
 ## Instrucciones de ejecución
+
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/Danisolre/replication-graham-knittel-2024.git
@@ -112,6 +114,7 @@ La figura replicada se guardará en `output/figures/fig1A_ecf_county.png`.
 | Escala del mapa | Logarítmica (log10), consistente con el artículo original |
 | Paleta de colores | YlOrRd (amarillo → rojo), secuencial para valores positivos |
 | Formato geoespacial | GeoJSON de condados con códigos FIPS |
-| Ámbito geográfico | EE.UU. continental (CONUS); se excluyen Alaska, Hawaii y territorios |
+| Ámbito geográfico | EE.UU. continental (CONUS), incluyendo Alaska y Hawaii como insets reposicionados |
+| Tratamiento Alaska/Hawaii | Para Alaska (02) y Hawaii (15), si la geometría es MultiPolygon, se conserva únicamente el polígono principal |
 | Columna ECF utilizada | `eff_emiss_per_emp_avg` (emisiones efectivas por empleado, valor promedio) |
 | Herramienta original | La figura del paper fue generada en Tableau; esta réplica usa Python (matplotlib + geopandas) |
