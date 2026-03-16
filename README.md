@@ -52,8 +52,10 @@ replication-graham-knittel-2024/
 ├── docs/                               # Documentación y decisiones metodológicas
 │
 ├── .gitignore
-├── requirements.txt                    # Dependencias de Python
-└── README.md                           # Este archivo
+├── environment.yml               # Entorno reproducible (Conda)
+├── requirements.txt              # Dependencias de Python (pip)
+├── run_pipeline.sh               # Script de ejecución end-to-end del pipeline
+└── README.md                     # Este archivo
 ```
 
 ## Requisitos técnicos
